@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>WOLF LABS | Audio Log (Homework)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- Fonts: Outfit (Modern UI) & Inter (Body) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === THE PODCAST (DARK MODE / STUDIO THEME) === */
+        :root {
+            --bg-deep: #0B0914;        /* Very deep purple/black */
+            --bg-panel: #161324;       /* Slightly lighter studio gray/purple */
+            --accent-purple: #8B5CF6;  /* Studio Neon Purple */
+            --accent-mint: #10B981;    /* Digital Wellbeing Mint */
+            --accent-pink: #EC4899;    /* Alert Pink / Error */
+            --text-main: #F8FAFC;      /* Pure White */
+            --text-muted: #94A3B8;     /* Slate 400 */
+            --shadow-glow: rgba(139, 92, 246, 0.2);
+            --shadow-mint: rgba(16, 185, 129, 0.2);
+        }
+
+        body { 
+            font-family: 'Inter', sans-serif; 
+            background-color: #000;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .font-display { font-family: 'Outfit', sans-serif; }
+
+        /* === MOBILE PHONE MOCKUP === */
+        #mobile-frame {
+            width: 100%;
+            max-width: 430px; 
+            height: 100dvh;
+            background-color: var(--bg-deep);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 50px rgba(139, 92, 246, 0.15);
+            /* Audio waveform abstract background */
+            background-image: 
+                radial-gradient(ellipse at top right, rgba(139, 92, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at bottom left, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+        }
+
+        @media (min-width: 431px) {
+            #mobile-frame {
+                height: 90vh;
+                border-radius: 40px;
+                border: 12px solid #1A1A1A;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.9), inset 0 0 0 2px #333;
+            }
+        }
+
+        /* Fake Notch */
+        .phone-notch {
+            display: none;
+        }
+        @media (min-width: 431px) {
+            .phone-notch {
+                display: block;
+                position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+                width: 150px; height: 30px; background-color: #1A1A1A;
+                border-bottom-left-radius: 20px; border-bottom-right-radius: 20px; z-index: 50;
+            }
+        }
+
+        /* Status Bar */
+        .status-bar {
+            height: 44px; display: flex; justify-content: space-between; align-items: center;
+            padding: 0 24px; font-size: 12px; font-weight: 600; z-index: 40; position: relative; color: var(--text-main);
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* BUTTONS */
+        .btn-purple {
+            background: linear-gradient(135deg, #A78BFA, #8B5CF6); color: white; border-radius: 100px;
+            font-family: 'Outfit', sans-serif; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; transition: all 0.3s ease; border: none; cursor: pointer;
+            box-shadow: 0 8px 20px var(--shadow-glow);
+        }
+        .btn-purple:hover { transform: translateY(-3px); box-shadow: 0 12px 25px rgba(139, 92, 246, 0.4); }
+        .btn-purple:active { transform: scale(0.96); }
+
+        .btn-outline {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); color: var(--text-main); border-radius: 100px;
+            font-family: 'Outfit', sans-serif; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 0.05em; transition: all 0.2s ease; cursor: pointer;
+        }
+        .btn-outline:active { background: rgba(255,255,255,0.1); border-color: var(--accent-purple); transform: scale(0.96); }
+
+        /* QUIZ OPTIONS (MCQ) */
+        .mcq-option {
+            background: var(--bg-panel); border: 1px solid rgba(255,255,255,0.05);
+            transition: all 0.2s ease; cursor: pointer; display: flex; align-items: center; padding: 1.2rem; border-radius: 20px;
+            width: 100%; text-align: left; box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .mcq-option:active:not(.locked-check) { transform: scale(0.98); border-color: var(--accent-purple); background: rgba(139, 92, 246, 0.05); }
+        .mcq-option.correct { background: rgba(16, 185, 129, 0.1); border-color: var(--accent-mint); color: var(--accent-mint); box-shadow: 0 0 15px rgba(16, 185, 129, 0.2); }
+        .mcq-option.wrong { background: rgba(236, 72, 153, 0.1); border-color: var(--accent-pink); color: var(--accent-pink); box-shadow: 0 0 15px rgba(236, 72, 153, 0.2);}
+
+        /* ANIMATIONS */
+        .fade-in { animation: fadeIn 0.4s ease forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .shake { animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes shake { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(3px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-5px, 0, 0); } 40%, 60% { transform: translate3d(5px, 0, 0); } }
+
+        /* PROGRESS BAR */
+        .progress-container { width: 100%; height: 6px; background: rgba(255,255,255,0.05); overflow: hidden; border-radius: 10px; margin-bottom: 24px;}
+        .progress-fill { height: 100%; background: var(--accent-mint); transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 10px var(--accent-mint);}
+
+        #confetti-canvas { position: absolute; inset: 0; pointer-events: none; z-index: 9999; }
+    </style>
+</head>
+<body>
+
+    <!-- MOBILE CONTAINER -->
+    <div id="mobile-frame">
+        <canvas id="confetti-canvas"></canvas>
+        <div class="phone-notch"></div>
+        
+        <!-- Status Bar -->
+        <div class="status-bar">
+            <span id="clock">09:41</span>
+            <div class="flex items-center gap-2">
+                <i class="fas fa-signal text-[10px]"></i>
+                <i class="fas fa-wifi text-[10px]"></i>
+                <i class="fas fa-battery-full text-xs text-white"></i>
+            </div>
+        </div>
+
+        <!-- START SCREEN (FIXED WITH SCROLL) -->
+        <div id="screen-start" class="flex-grow flex flex-col p-8 relative z-10 animate-in fade-in overflow-y-auto">
+            
+            <div class="my-auto flex flex-col items-center w-full">
+                <div class="w-24 h-24 rounded-full bg-[var(--accent-purple)]/10 mb-8 flex items-center justify-center border border-[var(--accent-purple)]/30 shadow-[0_0_30px_rgba(139,92,246,0.2)_inset] animate-pulse">
+                    <i class="fas fa-headphones text-5xl text-[var(--accent-purple)]"></i>
+                </div>
+                
+                <div class="text-center space-y-3 w-full">
+                    <p class="text-[var(--accent-mint)] font-bold text-[10px] tracking-[0.4em] uppercase font-display bg-[var(--accent-mint)]/10 px-4 py-1.5 rounded-full inline-block border border-[var(--accent-mint)]/20 shadow-sm">Homework Protocol</p>
+                    <h1 class="text-5xl font-black text-white leading-none tracking-tight uppercase font-display mt-4">Audio<br><span class="text-[var(--accent-purple)]">Log</span></h1>
+                    <p class="text-sm text-[var(--text-muted)] mt-4 leading-relaxed px-2 font-medium">Complete this 15-node evaluation to prove your vocabulary and grammar skills.</p>
+                </div>
+                
+                <div class="w-full bg-[var(--bg-panel)] border border-white/5 p-6 rounded-3xl mt-8 text-left mb-6 shadow-lg">
+                    <p class="text-[10px] text-[var(--accent-purple)] font-bold uppercase tracking-widest border-b border-white/10 pb-3 mb-4 font-display">> STUDIO DATA</p>
+                    <ul class="text-sm text-gray-300 space-y-3 font-medium">
+                        <li class="flex items-center"><div class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--accent-purple)] text-[10px]"></i></div> Total Nodes: 15</li>
+                        <li class="flex items-center"><div class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--accent-purple)] text-[10px]"></i></div> Focus: Purpose & Certainty</li>
+                        <li class="flex items-center"><div class="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mr-3"><i class="fas fa-check text-[var(--accent-purple)] text-[10px]"></i></div> Difficulty: A1 Core</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Button pushed to bottom but accessible via scroll -->
+            <button onclick="startHomework()" class="btn-purple w-full py-4 text-base mt-8 mb-4 flex-shrink-0">
+                Start Recording
+            </button>
+        </div>
+
+        <!-- QUIZ SCREEN -->
+        <div id="screen-quiz" class="hidden flex-grow flex-col relative z-10 h-full overflow-hidden">
+            <!-- Header -->
+            <div class="pt-6 pb-2 px-6 flex justify-between items-center z-20 flex-shrink-0">
+                <div class="flex flex-col">
+                    <span class="text-[9px] font-bold text-[var(--text-muted)] uppercase tracking-widest font-display">Audio Sync</span>
+                    <span class="text-sm font-black text-[var(--accent-purple)] font-display" id="progress-text">01 / 15</span>
+                </div>
+                <div class="flex items-center gap-2 bg-[var(--bg-panel)] px-3 py-1.5 rounded-full border border-white/10 shadow-sm">
+                    <i class="fas fa-microphone text-[var(--accent-mint)] text-[10px]"></i>
+                    <span class="text-xs font-bold text-white font-inter" id="score-text">000</span>
+                </div>
+            </div>
+            
+            <div class="px-6 w-full flex-shrink-0"><div class="progress-container"><div id="progress-bar" class="progress-fill" style="width: 0%;"></div></div></div>
+
+            <!-- Question Area -->
+            <div class="flex-grow overflow-y-auto px-6 pb-32 flex flex-col" id="question-container">
+                <!-- Injected via JS -->
+            </div>
+
+            <!-- Next Button Container -->
+            <div class="p-6 bg-gradient-to-t from-[var(--bg-deep)] via-[var(--bg-deep)] to-transparent mt-auto hidden absolute bottom-0 left-0 w-full z-30" id="next-btn-container">
+                <button onclick="nextQuestion()" class="btn-purple w-full py-4 text-base shadow-lg flex justify-center items-center gap-2">
+                    Next Node <i class="fas fa-arrow-right text-sm"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- RESULT SCREEN -->
+        <div id="screen-result" class="hidden flex-grow flex-col p-8 relative z-10 animate-in fade-in overflow-y-auto">
+            <div class="my-auto flex flex-col items-center text-center w-full">
+                <div id="result-icon" class="w-32 h-32 rounded-full bg-[var(--accent-mint)]/10 mb-8 flex items-center justify-center border-4 border-[var(--accent-mint)]/30 shadow-[0_0_40px_rgba(16,185,129,0.2)]">
+                    <i class="fas fa-broadcast-tower text-6xl text-[var(--accent-mint)]"></i>
+                </div>
+                
+                <h2 class="text-4xl font-black text-white tracking-tight uppercase font-display mb-3" id="result-title">Episode Saved</h2>
+                <p class="text-[10px] text-[var(--bg-deep)] font-bold uppercase tracking-widest border border-[var(--accent-mint)] px-4 py-1.5 bg-[var(--accent-mint)] rounded-full mb-10 shadow-sm font-display" id="result-rank">Rank: Podcast Host</p>
+                
+                <div class="w-full bg-[var(--bg-panel)] border border-white/5 rounded-3xl py-8 mb-12 shadow-lg">
+                    <p class="text-xs text-[var(--text-muted)] uppercase tracking-widest font-bold mb-2 font-display">Final Score</p>
+                    <p class="text-6xl font-black text-white font-display" id="final-score">15/15</p>
+                </div>
+            </div>
+            
+            <button onclick="location.reload()" class="btn-outline w-full py-4 text-sm mt-8 mb-4 flex-shrink-0">
+                Close Log
+            </button>
+        </div>
+
+    </div>
+
+    <!-- HOMEWORK ENGINE (JS) -->
+    <script>
+        // --- SECURITY & UTILS ---
+        const esc = (s) => s ? String(s).replace(/\\/g, '\\\\').replace(/'/g, '&#39;').replace(/"/g, '&quot;').replace(/\n/g, '\\n').replace(/\r/g, '') : "";
+
+        // -- Mobile Clock Logic --
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours();
+            let m = now.getMinutes();
+            h = h < 10 ? '0'+h : h;
+            m = m < 10 ? '0'+m : m;
+            document.getElementById('clock').innerText = `${h}:${m}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- HOMEWORK DATA (15 QUESTIONS) ---
+        const homeworkData = [
+            {
+                q: "I use my phone ___ stay in touch with my family.",
+                options: ["to", "for", "in"],
+                correct: 0,
+                hint: "Use the Infinitive of Purpose to say WHY you do something."
+            },
+            {
+                q: "TikTok videos are very fun and ___.",
+                options: ["entertaining", "bored", "waste"],
+                correct: 0,
+                hint: "Means they hold your attention and give you joy."
+            },
+            {
+                q: "If you are 100% sure, you say: I will ___ do it.",
+                options: ["definitely", "maybe", "probably"],
+                correct: 0,
+                hint: "There is no doubt. It's a certainty."
+            },
+            {
+                q: "I don't have anything to do. I am ___.",
+                options: ["bored", "addictive", "entertaining"],
+                correct: 0,
+                hint: "The feeling when you are not interested in anything."
+            },
+            {
+                q: "If you are 50% sure, you say:",
+                options: ["Maybe", "Definitely", "Probably"],
+                correct: 0,
+                hint: "It might happen, or it might not happen."
+            },
+            {
+                q: "Social media can be hard to stop. It is very ___.",
+                options: ["addictive", "bored", "catch up"],
+                correct: 0,
+                hint: "You feel like you need to keep doing it."
+            },
+            {
+                q: "He uses WhatsApp ___ message his friends.",
+                options: ["to", "for", "at"],
+                correct: 0,
+                hint: "Remember the rule: NEVER use 'for' + verb!"
+            },
+            {
+                q: "What does 'waste time' mean?",
+                options: ["Use time badly", "Save time", "Have fun"],
+                correct: 0,
+                hint: "Spending time on things that are not useful."
+            },
+            {
+                q: "I haven't seen you in a long time! Let's drink coffee and ___.",
+                options: ["catch up", "waste time", "bored"],
+                correct: 0,
+                hint: "Share recent news about each other's lives."
+            },
+            {
+                q: "If you are 80% sure, you say: I will ___ go to the party.",
+                options: ["probably", "maybe", "definitely"],
+                correct: 0,
+                hint: "Very likely, but not 100% certain."
+            },
+            {
+                q: "Which sentence is CORRECT?",
+                options: ["I use an app to learn English.", "I use an app for learn English.", "I use an app to learning English."],
+                correct: 0,
+                hint: "Always use [TO + Base Verb]."
+            },
+            {
+                q: "We use social media to ___ in touch.",
+                options: ["stay", "catch", "do"],
+                correct: 0,
+                hint: "Maintain communication with someone."
+            },
+            {
+                q: "I will ___ reduce my screen time. I am certain!",
+                options: ["definitely", "probably", "maybe"],
+                correct: 0,
+                hint: "You are absolutely sure about your decision."
+            },
+            {
+                q: "He watches BBC videos ___ practice English.",
+                options: ["to", "for", "in"],
+                correct: 0,
+                hint: "To say WHY he does it, use the correct preposition."
+            },
+            {
+                q: "My screen time is 10 hours! I need to ___.",
+                options: ["reduce it", "catch up", "stay in touch"],
+                correct: 0,
+                hint: "Make the amount of time smaller."
+            }
+        ];
+
+        // --- APP STATE ---
+        let currentQ = 0;
+        let score = 0;
+        let isLocked = false;
+
+        // --- NAVIGATION ---
+        function showScreen(id) {
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-quiz').classList.add('hidden');
+            document.getElementById('screen-result').classList.add('hidden');
+            
+            const target = document.getElementById(id);
+            target.classList.remove('hidden');
+            target.classList.add('flex');
+            target.classList.remove('fade-in');
+            void target.offsetWidth; // trigger reflow
+            target.classList.add('fade-in');
+        }
+
+        function startHomework() {
+            // Randomize questions
+            shuffleArray(homeworkData);
+            homeworkData.forEach(q => {
+                const correctText = q.options[q.correct];
+                shuffleArray(q.options);
+                q.correct = q.options.indexOf(correctText);
+            });
+
+            currentQ = 0;
+            score = 0;
+            updateTopBar();
+            renderQuestion();
+            showScreen('screen-quiz');
+        }
+
+        // --- QUIZ LOGIC ---
+        function updateTopBar() {
+            document.getElementById('progress-text').innerText = `${String(currentQ + 1).padStart(2, '0')} / ${homeworkData.length}`;
+            document.getElementById('progress-bar').style.width = `${((currentQ) / homeworkData.length) * 100}%`;
+            document.getElementById('score-text').innerText = String(score * 10).padStart(3, '0');
+        }
+
+        function renderQuestion() {
+            isLocked = false;
+            document.getElementById('next-btn-container').classList.add('hidden');
+            
+            const qData = homeworkData[currentQ];
+            const container = document.getElementById('question-container');
+            const letters = ['A', 'B', 'C'];
+
+            let html = `
+                <div class="mb-8 mt-4 animate-in fade-in">
+                    <h2 class="text-3xl font-black text-white leading-snug font-display">${qData.q.replace(/\[(.*?)\]/g, '<span class="text-[var(--accent-purple)]">$1</span>')}</h2>
+                </div>
+                <div class="space-y-4 w-full animate-in fade-in" id="options-box" style="animation-delay: 0.1s; animation-fill-mode: both;">
+            `;
+
+            qData.options.forEach((opt, idx) => {
+                html += `
+                    <button class="mcq-option group" onclick="selectOption(${idx}, this)">
+                        <div class="w-10 h-10 rounded-full border border-white/10 bg-black/50 flex items-center justify-center text-sm font-bold text-gray-500 mr-5 font-display group-hover:text-[var(--accent-purple)] group-hover:border-[var(--accent-purple)] transition-colors">${letters[idx]}</div>
+                        <span class="text-lg font-medium text-white font-inter tracking-wide">${opt}</span>
+                    </button>
+                `;
+            });
+
+            html += `
+                </div>
+                <div id="feedback-box" class="hidden mt-8 p-6 rounded-2xl bg-[var(--bg-panel)] border-l-4 border-[var(--accent-mint)] shadow-lg animate-in fade-in mb-8">
+                    <p class="text-[10px] font-bold text-[var(--accent-mint)] uppercase tracking-[0.2em] mb-2 font-display">> AUDIO NOTE</p>
+                    <p class="text-base text-gray-300 font-inter leading-relaxed italic">"${qData.hint}"</p>
+                </div>
+            `;
+
+            container.innerHTML = html;
+            container.scrollTop = 0;
+        }
+
+        function selectOption(selectedIdx, btnEl) {
+            if (isLocked) return;
+            isLocked = true;
+
+            const qData = homeworkData[currentQ];
+            const isCorrect = selectedIdx === qData.correct;
+            const parent = document.getElementById('options-box');
+
+            // Lock buttons
+            Array.from(parent.children).forEach((child, i) => {
+                child.classList.add('locked-check');
+                if (i === qData.correct) {
+                    child.classList.add('correct'); 
+                } else if (i !== qData.correct && i === selectedIdx) {
+                    child.classList.add('wrong'); 
+                } else {
+                    child.classList.add('opacity-40'); 
+                }
+            });
+
+            if (isCorrect) {
+                score++;
+                shootConfetti();
+            } else {
+                // Error shake effect
+                document.getElementById('mobile-frame').classList.add('shake');
+                setTimeout(() => document.getElementById('mobile-frame').classList.remove('shake'), 400);
+                
+                // Show hint if wrong
+                const fbBox = document.getElementById('feedback-box');
+                fbBox.classList.remove('hidden');
+                fbBox.classList.replace('border-[var(--accent-mint)]', 'border-[var(--accent-pink)]');
+                fbBox.querySelector('p').classList.replace('text-[var(--accent-mint)]', 'text-[var(--accent-pink)]');
+            }
+
+            updateTopBar();
+            
+            // Show Next button
+            const nextBtn = document.getElementById('next-btn-container');
+            nextBtn.classList.remove('hidden');
+            nextBtn.style.animation = "fadeIn 0.3s ease forwards";
+            
+            // Scroll down
+            setTimeout(() => {
+                document.getElementById('question-container').scrollTo({
+                    top: document.getElementById('question-container').scrollHeight,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        }
+
+        function nextQuestion() {
+            currentQ++;
+            if (currentQ < homeworkData.length) {
+                updateTopBar();
+                renderQuestion();
+            } else {
+                document.getElementById('progress-bar').style.width = `100%`;
+                setTimeout(showResult, 300);
+            }
+        }
+
+        function showResult() {
+            showScreen('screen-result');
+            
+            document.getElementById('final-score').innerText = `${score}/15`;
+            
+            const rankEl = document.getElementById('result-rank');
+            const iconEl = document.getElementById('result-icon');
+            const titleEl = document.getElementById('result-title');
+
+            const percentage = score / homeworkData.length;
+
+            if (percentage === 1) {
+                titleEl.innerText = "Perfect Audio";
+                rankEl.innerText = "Rank: Digital Master";
+                rankEl.className = "text-[10px] text-[var(--bg-deep)] font-bold uppercase tracking-widest border border-[var(--accent-mint)] px-4 py-1.5 bg-[var(--accent-mint)] rounded-full mb-10 shadow-sm font-display";
+                iconEl.innerHTML = '<i class="fas fa-check-circle text-6xl text-[var(--accent-mint)]"></i>';
+                shootConfetti(); setTimeout(shootConfetti, 500);
+            } else if (percentage >= 0.7) {
+                titleEl.innerText = "Good Recording";
+                rankEl.innerText = "Rank: Podcast Host";
+                rankEl.className = "text-[10px] text-[var(--bg-deep)] font-bold uppercase tracking-widest border border-[var(--accent-purple)] px-4 py-1.5 bg-[var(--accent-purple)] rounded-full mb-10 shadow-sm font-display";
+                iconEl.className = "w-32 h-32 rounded-full bg-[var(--accent-purple)]/10 mb-8 flex items-center justify-center border-4 border-[var(--accent-purple)]/30 shadow-[0_0_40px_rgba(139,92,246,0.2)]";
+                iconEl.innerHTML = '<i class="fas fa-microphone-alt text-6xl text-[var(--accent-purple)]"></i>';
+            } else {
+                titleEl.innerText = "Signal Lost";
+                rankEl.innerText = "Rank: Needs Practice";
+                rankEl.className = "text-[10px] text-white font-bold uppercase tracking-widest border border-white/20 px-4 py-1.5 bg-white/10 rounded-full mb-10 shadow-sm font-display";
+                iconEl.className = "w-32 h-32 rounded-full bg-white/5 mb-8 flex items-center justify-center border-4 border-white/10 shadow-sm";
+                iconEl.innerHTML = '<i class="fas fa-times-circle text-6xl text-gray-500"></i>';
+            }
+        }
+
+        // --- UTILS ---
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // --- CONFETTI ENGINE (STUDIO STYLE) ---
+        function shootConfetti() {
+            const cCanvas = document.getElementById('confetti-canvas'); 
+            const cCtx = cCanvas.getContext('2d');
+            const frame = document.getElementById('mobile-frame');
+            cCanvas.width = frame.offsetWidth; 
+            cCanvas.height = frame.offsetHeight;
+            
+            const pieces = []; 
+            const colors = ['#8B5CF6', '#10B981', '#3B82F6', '#FFFFFF'];
+            
+            for(let i=0; i<40; i++) {
+                pieces.push({ 
+                    x: cCanvas.width / 2, 
+                    y: cCanvas.height / 2, 
+                    vx: (Math.random() - 0.5) * 16, 
+                    vy: (Math.random() - 1) * 16 - 4, 
+                    size: Math.random() * 8 + 4, 
+                    color: colors[Math.floor(Math.random() * colors.length)], 
+                    rot: Math.random() * 360, 
+                    rotSpeed: (Math.random() - 0.5) * 10 
+                });
+            }
+            
+            let animationId;
+            function animateC() {
+                cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height); 
+                let active = false;
+                pieces.forEach(p => {
+                    p.x += p.vx; 
+                    p.y += p.vy; 
+                    p.vy += 0.5; // gravity
+                    p.rot += p.rotSpeed; 
+                    if(p.y < cCanvas.height) active = true;
+                    
+                    cCtx.save(); 
+                    cCtx.translate(p.x, p.y); 
+                    cCtx.rotate(p.rot * Math.PI / 180); 
+                    cCtx.fillStyle = p.color; 
+                    // Circular and soft confetti
+                    cCtx.beginPath(); cCtx.arc(0, 0, p.size/2, 0, Math.PI*2); cCtx.fill(); 
+                    cCtx.restore(); 
+                });
+                
+                if(active) {
+                    animationId = requestAnimationFrame(animateC); 
+                } else {
+                    cCtx.clearRect(0, 0, cCanvas.width, cCanvas.height);
+                }
+            }
+            animateC();
+        }
+    </script>
+</body>
+</html>
